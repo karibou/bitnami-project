@@ -1,0 +1,35 @@
+version: "3"
+services:
+  mariadb:
+    image: bitnami/mariadb:10.1.25-r0
+    environment:
+      - MARIADB_ROOT_PASSWORD=root-password
+      - MARIADB_USER=wordpress
+      - MARIADB_PASSWORD=my-password
+      - MARIADB_DATABASE=wordpress
+    volumes:
+      - ./mariadb-data:/bitnami/mariadb
+
+  php-fpm:
+    image: bitnami/php-fpm:5.6.31-r0
+    depends_on:
+      - mariadb
+    volumes:
+      - ./wordpress:/app
+      - ./php-fpm_entrypoint.sh:/app/php-fpm_entrypoint.sh:ro
+      - ./wp_automate.php:/app/wp_automate.php:ro
+    # Override the image's entrypoint by our own
+    # The original CMD statement must be repeated as it is
+    # dropped by the use of entrypoint:
+    entrypoint: /app/php-fpm_entrypoint.sh
+    command: /run.sh
+
+  apache:
+    image: bitnami/apache:2.4.27-r0
+    ports:
+      - 80:80
+    depends_on:
+      - php-fpm
+    volumes:
+      - ./apache-vhost/wordpress.conf:/bitnami/apache/conf/vhosts/wordpress.conf:ro
+      - ./wordpress:/app
