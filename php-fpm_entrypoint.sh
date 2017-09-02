@@ -23,4 +23,4 @@ if [ -f /wp_automate.php ] ; then
     /opt/bitnami/php/bin/php /wp_automate.php
 fi
 
-/entrypoint.sh php-fpm
+exec /app-entrypoint.sh "$@"
