@@ -19,8 +19,8 @@ while [ $STOPPED -ne 0 ] && [ $COUNTER -ne 0 ]; do
     fi
 done
 
-if [ -f /app/wp_automate.php ] ; then
-    /opt/bitnami/php/bin/php /app/wp_automate.php
+if [ -f /wp_automate.php ] ; then
+    /opt/bitnami/php/bin/php /wp_automate.php
 fi
 
 /entrypoint.sh php-fpm
