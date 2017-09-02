@@ -1,9 +1,6 @@
 #!/bin/bash
 # init.sh script
 
-echo "#################################"
-echo "### Running custom entrypoint ###"
-echo "#################################"
 # Install WordPress
 STOPPED=1
 COUNTER=10
