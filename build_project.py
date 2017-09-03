@@ -47,7 +47,7 @@ def get_latest_wp():
             print('We have the latest %s' % wp_latest['file'])
             return True
         else:
-            print('Unable to get %s that matches %s' % (latest_wp['file'],
+            print('Unable to get %s that matches %s' % (wp_latest['file'],
                                                         latest_md5))
             return False
 
