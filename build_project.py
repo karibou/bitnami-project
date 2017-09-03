@@ -4,6 +4,7 @@ import os
 import tarfile
 import shutil
 import hashlib
+import docker
 
 wp_latest = {
     'file': 'latest.tar.gz',
@@ -85,6 +86,17 @@ def extract_wp_tarball():
         return False
     return True
 
+def setup_wp_source_tree():
+    home = os.getcwd()
+    wp_root = '%s/wordpress' % home
+    shutil.copy('./wp-config.php','./wordpress/wp-config.php')
+
+    client = docker.from_env()
+    client.containers.run('ubuntu:latest', 
+                         volumes={wp_root:{'bind': '/app'}},
+                         command=['chown','-R',':daemon','/app/'])
+
 if __name__ == '__main__':
     get_latest_wp()
     extract_wp_tarball()
+    setup_wp_source_tree()
