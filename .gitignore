@@ -1,0 +1,7 @@
+apache-vhost
+docker-compose.yml
+latest.tar.gz
+mariadb-data
+__pycache__
+wordpress
+.coverage
