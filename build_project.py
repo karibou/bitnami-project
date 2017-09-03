@@ -6,7 +6,7 @@ import hashlib
 wp_latest = {
     'file' : 'latest.tar.gz',
     'url' : 'https://wordpress.org/wordpress-latest.tar.gz',
-    'md5' : 'https://wordpress.org/wordpres-latest.tar.gz.md5',
+    'md5' : 'https://wordpress.org/wordpress-latest.tar.gz.md5',
     }
 
 def get_latest_wp():
