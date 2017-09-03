@@ -1,12 +1,15 @@
 #!/usr/bin/python3
 import urllib.request
 import os
+import tarfile
+import shutil
 import hashlib
 
 wp_latest = {
     'file': 'latest.tar.gz',
     'url': 'https://wordpress.org/wordpress-latest.tar.gz',
     'md5': 'https://wordpress.org/wordpress-latest.tar.gz.md5',
+    'dir': './wordpress',
     }
 
 
@@ -60,6 +63,28 @@ def get_latest_wp():
         print('Using the current file')
         return
 
+def extract_wp_tarball():
+
+    # First we cleanup the old wp dir
+    try:
+        if os.path.exists(wp_latest['dir']):
+            shutil.rmtree(wp_latest['dir'])
+
+    except PermissionError as err:
+        print('Unable to remove old %s directory : %s' % (wp_latest['dir'],
+                                                          err))
+        return False
+
+    new_wp = tarfile.open(wp_latest['file'], 'r')
+    try:
+        new_wp.extractall()
+        new_wp.close()
+
+    except tarfile.TarError as tarerr:
+        print('Unable to extract the tarball : %s' % tarerr)
+        return False
+    return True
 
 if __name__ == '__main__':
     get_latest_wp()
+    extract_wp_tarball()
