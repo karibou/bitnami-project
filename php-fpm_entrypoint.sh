@@ -16,8 +16,8 @@ while [ $STOPPED -ne 0 ] && [ $COUNTER -ne 0 ]; do
     fi
 done
 
-if [ -f /wp_automate.php ] ; then
-    /opt/bitnami/php/bin/php /wp_automate.php
+if [ -f /wp_automate.php ]; then
+    /opt/bitnami/php/bin/php /wp_automate.php 2> /dev/null
 fi
 
 exec /app-entrypoint.sh "$@"
