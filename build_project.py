@@ -4,10 +4,11 @@ import os
 import hashlib
 
 wp_latest = {
-    'file' : 'latest.tar.gz',
-    'url' : 'https://wordpress.org/wordpress-latest.tar.gz',
-    'md5' : 'https://wordpress.org/wordpress-latest.tar.gz.md5',
+    'file': 'latest.tar.gz',
+    'url': 'https://wordpress.org/wordpress-latest.tar.gz',
+    'md5': 'https://wordpress.org/wordpress-latest.tar.gz.md5',
     }
+
 
 def check_md5_ok(file_to_check, md5):
     '''
@@ -21,6 +22,7 @@ def check_md5_ok(file_to_check, md5):
     else:
         return False
 
+
 def get_latest_wp():
 
     try:
@@ -29,8 +31,8 @@ def get_latest_wp():
             latest_md5 = md5_resp.read().decode('UTF-8')
 
         # Check if we don't already have the latest file
-        if os.path.exists(wp_latest['file']) :
-            if check_md5_ok(wp_latest['file'],latest_md5):
+        if os.path.exists(wp_latest['file']):
+            if check_md5_ok(wp_latest['file'], latest_md5):
                 print('We have the latest %s' % wp_latest['file'])
                 return True
             else:
@@ -43,7 +45,7 @@ def get_latest_wp():
             with open(wp_latest['file'], 'wb') as tarball:
                 tarball.write(tarball_resp.read())
 
-        if check_md5_ok(wp_latest['file'],latest_md5):
+        if check_md5_ok(wp_latest['file'], latest_md5):
             print('We have the latest %s' % wp_latest['file'])
             return True
         else:
@@ -57,7 +59,6 @@ def get_latest_wp():
         print('Unable to fetch MD5 value : %s' % err)
         print('Using the current file')
         return
-
 
 
 if __name__ == '__main__':
