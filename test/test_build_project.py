@@ -36,7 +36,7 @@ class BuildProjectTests(unittest.TestCase):
         ret = build_project.check_md5_ok(None, 'a')
         self.assertFalse(ret)
 
-    @patch('build_project.urllib.request.urlopen')
+    @patch('build_project.urlopen')
     @patch('build_project.os.path.exists', return_value=True)
     @patch('build_project.check_md5_ok', return_value=True)
     def test_get_latest_has_file_same_md5(self, m_md5_ok,
@@ -47,7 +47,7 @@ class BuildProjectTests(unittest.TestCase):
         ret = build_project.get_latest_wp()
         self.assertTrue(ret)
 
-    @patch('build_project.urllib.request.urlopen')
+    @patch('build_project.urlopen')
     @patch('build_project.os.path.exists', return_value=True)
     @patch('build_project.check_md5_ok', side_effect=(False, True))
     @patch('builtins.open')
@@ -60,7 +60,7 @@ class BuildProjectTests(unittest.TestCase):
         ret = build_project.get_latest_wp()
         self.assertTrue(ret)
 
-    @patch('build_project.urllib.request.urlopen')
+    @patch('build_project.urlopen')
     @patch('build_project.os.path.exists', return_value=True)
     @patch('build_project.check_md5_ok', side_effect=(False, False))
     @patch('builtins.open')

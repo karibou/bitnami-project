@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-import urllib.request
+from urllib.request import urlopen
 import os
 import tarfile
 import shutil
@@ -31,7 +31,7 @@ def get_latest_wp():
 
     try:
         # Get the MD5 of the latest file first
-        latest_md5 = urllib.request.urlopen(wp_latest['md5']).read().decode('UTF-8')
+        latest_md5 = urlopen(wp_latest['md5']).read().decode('UTF-8')
 
         # Check if we don't already have the latest file
         if os.path.exists(wp_latest['file']):
@@ -43,7 +43,7 @@ def get_latest_wp():
 
         # Either we don't have a file or the MD5 doesn't match
         # Get a new one
-        with urllib.request.urlopen(wp_latest['url']) as tarball_resp:
+        with urlopen(wp_latest['url']) as tarball_resp:
             print('Downloading new %s' % wp_latest['file'])
             with open(wp_latest['file'], 'wb') as tarball:
                 tarball.write(tarball_resp.read())
