@@ -6,6 +6,7 @@ from unittest.mock import patch, MagicMock
 class BuildProjectTests(unittest.TestCase):
     @classmethod
     def setUpClass(self):
+        self.wp_latest = build_project.wp_latest
         self.fake_file = MagicMock()
         self.fake_md5_hash = MagicMock()
         self.fake_md5_hash.add_spec('hexdigest')
