@@ -76,8 +76,8 @@ def extract_wp_tarball():
                                                           err))
         return False
 
-    new_wp = tarfile.open(wp_latest['file'], 'r')
     try:
+        new_wp = tarfile.open(wp_latest['file'], 'r')
         new_wp.extractall()
         new_wp.close()
 
