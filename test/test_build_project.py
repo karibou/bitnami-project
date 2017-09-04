@@ -74,3 +74,11 @@ class BuildProjectTests(unittest.TestCase):
         m_open.return_value = self.fake_file
         ret = build_project.get_latest_wp()
         self.assertFalse(ret)
+
+    @patch('build_project.urlopen', side_effect=ConnectionResetError)
+    def test_get_latest_exception(self, m_urlopen):
+        '''
+        Test exception handling
+        '''
+        ret = build_project.get_latest_wp()
+        self.assertFalse(ret)
