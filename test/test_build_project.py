@@ -44,6 +44,8 @@ class BuildProjectTests(unittest.TestCase):
         '''
         Check latest when file exist and has same md5
         '''
+        self.fake_md5_query.read.return_value = b'abc'
+        m_urlopen.return_value = self.fake_md5_query
         ret = build_project.get_latest_wp()
         self.assertTrue(ret)
 
