@@ -15,6 +15,7 @@ class BuildProjectTests(unittest.TestCase):
         self.fake_md5_query = MagicMock()
         self.fake_md5_query.add_spec('read')
         self.fake_tarfile = MagicMock()
+        self.fake_docker = MagicMock()
 
     @patch('builtins.open')
     @patch('build_project.hashlib.md5')
@@ -120,3 +121,14 @@ class BuildProjectTests(unittest.TestCase):
         self.assertFalse(ret)
         output = sys.stdout.getvalue().strip()
         self.assertEquals(output, 'Unable to extract the tarball :')
+
+    @patch('build_project.os.getcwd', return_value='/home')
+    @patch('build_project.shutil.copy')
+    @patch('build_project.docker.from_env')
+    def test_setup_wp_tree(self, m_docker, m_copy, m_cwd):
+        '''
+        Test wp source tree setup
+        '''
+        m_docker.return_value = self.fake_docker
+        ret = build_project.setup_wp_source_tree()
+        self.assertEquals(self.fake_docker.containers.run.call_count,1)
