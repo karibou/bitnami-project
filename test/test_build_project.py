@@ -1,7 +1,11 @@
 import unittest
 import build_project
 import sys
+import os
+import shutil
 import tarfile
+import subprocess
+import tempfile
 from unittest.mock import patch, MagicMock
 
 
@@ -16,6 +20,20 @@ class BuildProjectTests(unittest.TestCase):
         self.fake_md5_query.add_spec('read')
         self.fake_tarfile = MagicMock()
         self.fake_docker = MagicMock()
+        self.workdir = tempfile.mkdtemp()
+        os.makedirs('%s/bitnami-docker-php-fpm/5.6' % self.workdir)
+        self.Dockerfile = os.path.join(self.workdir,
+                                       'bitnami-docker-php-fpm/5.6',
+                                       'Dockerfile')
+        with open(self.Dockerfile, 'w') as dfile:
+            dfile.write('COPY rootfs /\n')
+            dfile.write('    BITNAMI_IMAGE_VERSION="5.6.31-r0" \\\n')
+            dfile.write('ENTRYPOINT ["/php-fpm_entrypoint.sh"]\n')
+            dfile.write('CMD ["/run.sh"]\n')
+
+    @classmethod
+    def tearDownClass(self):
+        shutil.rmtree(self.workdir)
 
     @patch('builtins.open')
     @patch('build_project.hashlib.md5')
@@ -131,4 +149,44 @@ class BuildProjectTests(unittest.TestCase):
         '''
         m_docker.return_value = self.fake_docker
         ret = build_project.setup_wp_source_tree()
-        self.assertEquals(self.fake_docker.containers.run.call_count,1)
+        self.assertEquals(self.fake_docker.containers.run.call_count, 1)
+
+    @patch('build_project.os.path.exists', return_value=True)
+    @patch('build_project.shutil.rmtree', side_effect=PermissionError)
+    def test_git_repo_cleanup_with_exception(self, m_rmtree, m_exists):
+        '''
+        Test git repo cleanup with exception handling
+        '''
+        ret = build_project.create_php_fpm_image()
+        self.assertFalse(ret)
+
+    @patch('build_project.os.path.exists', return_value=False)
+    @patch('build_project.subprocess.check_call',
+           side_effect=subprocess.CalledProcessError(1, 'error'))
+    def test_git_repo_git_clone_with_exception(self, m_sub, m_exists):
+        '''
+        Test git repo cleanup with exception handling
+        '''
+        ret = build_project.create_php_fpm_image()
+        self.assertFalse(ret)
+
+    @patch('build_project.os.path.exists', return_value=False)
+    @patch('build_project.subprocess.check_call')
+    @patch('build_project.shutil.copy', side_effect=OSError)
+    def test_git_repo_customfile_copy_with_exception(self,
+                                                     m_copy, m_sub, m_exists):
+        ret = build_project.create_php_fpm_image()
+        self.assertFalse(ret)
+
+    @patch('build_project.os.path.exists', return_value=False)
+    @patch('build_project.subprocess.check_call')
+    @patch('build_project.shutil.copy')
+    @patch('build_project.docker.from_env')
+    def test_git_repo_dockerfile_fix_with_exception(self, m_docker, m_copy,
+                                                    m_sub, m_exists):
+
+        os.chdir(self.workdir)
+        m_docker.return_value = self.fake_docker
+        ret = build_project.create_php_fpm_image()
+        self.assertEquals(self.fake_docker.images.build.call_args[1]['tag'],
+                          'php-fpm:5.6.31-r0-custom')
