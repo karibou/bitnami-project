@@ -31,8 +31,7 @@ def get_latest_wp():
 
     try:
         # Get the MD5 of the latest file first
-        with urllib.request.urlopen(wp_latest['md5']) as md5_resp:
-            latest_md5 = md5_resp.read().decode('UTF-8')
+        latest_md5 = urllib.request.urlopen(wp_latest['md5']).read().decode('UTF-8')
 
         # Check if we don't already have the latest file
         if os.path.exists(wp_latest['file']):
