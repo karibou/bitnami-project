@@ -224,6 +224,11 @@ def render_templates():
 
 if __name__ == '__main__':
 
+    if '-a' in sys.argv[1:]:
+        alternate = True
+    else:
+        alternate = False
+
     if get_latest_wp():
         print('...Done.')
         if extract_wp_tarball():
@@ -232,11 +237,13 @@ if __name__ == '__main__':
                 print('...Done.')
                 if render_templates():
                     print('...Done.')
-                    create_php_fpm_image()
-                    print('...Done')
+                    if not alternate:
+                        create_php_fpm_image()
+                        print('...Done')
                     print('Project creation completed')
                     print('Use the following command to start the service :')
                     print('    docker-compose up')
+                    print('')
                     vars=_getvars('docker-compose.yml')
                     print('You can connect to wordpress with :')
                     print('   username : %s' % vars['mariadb_wp_user'])
