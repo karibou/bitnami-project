@@ -11,18 +11,11 @@ services:
       - ./mariadb-data:/bitnami/mariadb
 
   php-fpm:
-    image: bitnami/php-fpm:5.6.31-r0
+    image: php-fpm:5.6.31-r0-custom
     depends_on:
       - mariadb
     volumes:
       - ./wordpress:/app
-      - ./php-fpm_entrypoint.sh:/php-fpm_entrypoint.sh:ro
-      - ./wp_automate.php:/wp_automate.php:ro
-    # Override the image's entrypoint by our own
-    # The original CMD statement must be repeated as it is
-    # dropped by the use of entrypoint:
-    entrypoint: /php-fpm_entrypoint.sh
-    command: /run.sh
 
   apache:
     image: bitnami/apache:2.4.27-r0
