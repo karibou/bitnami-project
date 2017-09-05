@@ -30,7 +30,10 @@ class BuildProjectTests(unittest.TestCase):
             dfile.write('COPY rootfs /\n')
             dfile.write('    BITNAMI_IMAGE_VERSION="5.6.31-r0" \\\n')
             dfile.write('ENTRYPOINT ["/php-fpm_entrypoint.sh"]\n')
-            dfile.write('CMD ["/run.sh"]\n')
+        self.compose = os.path.join(self.workdir, 'docker-compose.yml')
+        with open(self.compose, 'w') as cfile:
+            cfile.write('start\nMARIADB_USER=0xdead\n'
+                        'MARIADB_PASSWORD=0xbeef\nend\n')
 
     @classmethod
     def tearDownClass(self):
@@ -197,3 +200,77 @@ class BuildProjectTests(unittest.TestCase):
         self.assertEquals(self.fake_docker.images.build.call_args[1]['tag'],
                           'php-fpm:5.6.31-r0-custom')
         os.chdir(self.root)
+
+    def test_getvars(self):
+        '''
+        Test _getvars() template substitution
+        '''
+        os.chdir(self.workdir)
+        ret = build_project._getvars('docker-compose.yml')
+        self.assertEquals(ret['mariadb_user'], '0xdead')
+        self.assertEquals(ret['mariadb_password'], '0xbeef')
+        os.chdir(self.root)
+
+    def test_template_rendering(self):
+        '''
+        Test template rendering for wp-config.php and wp_automate.php
+        '''
+        os.mkdir(os.path.join(self.workdir,'wordpress'))
+        shutil.copy('wp_automate.template', self.workdir)
+        shutil.copy('wp-config.template', self.workdir)
+        os.chdir(self.workdir)
+        ret = build_project.render_templates()
+        self.assertTrue(os.path.exists(os.path.join(self.workdir,
+                                                    'wp_automate.php')))
+        self.assertTrue(os.path.exists(os.path.join(self.workdir,
+                                                    'wordpress',
+                                                    'wp-config.php')))
+        with open(os.path.join(self.workdir,'wp_automate.php')) as automate:
+            lines = automate.read()
+        self.assertRegexpMatches(lines, r'0xdead')
+        with open(os.path.join(self.workdir,'wordpress','wp-config.php')
+                  ) as config:
+            lines = config.read()
+        self.assertRegexpMatches(lines, r'0xbeef')
+        os.chdir(self.root)
+
+    @patch('build_project.get_latest_wp', return_value=True)
+    @patch('build_project.extract_wp_tarball', return_value=True)
+    @patch('build_project.setup_wp_source_tree', return_value=True)
+    @patch('build_project.render_templates', return_value=True)
+    @patch('build_project.create_php_fpm_image', return_value=True)
+    @patch('build_project._getvars', return_value={'mariadb_wp_user': 'a',
+                                                   'mariadb_wp_password': 'b'})
+    def test_main(self, m_getvars, m_image, m_templates, m_source,
+                  m_tarball, m_latest):
+        '''
+        Test main execution logic
+        '''
+        ret = build_project.main()
+        m_getvars.assert_called_once_with('docker-compose.yml')
+        m_image.assert_called_once_with()
+        m_templates.assert_called_once_with()
+        m_source.assert_called_once_with()
+        m_tarball.assert_called_once_with()
+        m_latest.assert_called_once_with()
+
+    @patch('build_project.get_latest_wp', return_value=True)
+    @patch('build_project.extract_wp_tarball', return_value=True)
+    @patch('build_project.setup_wp_source_tree', return_value=True)
+    @patch('build_project.render_templates', return_value=True)
+    @patch('build_project.create_php_fpm_image', return_value=True)
+    @patch('build_project._getvars', return_value={'mariadb_wp_user': 'a',
+                                                   'mariadb_wp_password': 'b'})
+    def test_main_alt(self, m_getvars, m_image, m_templates, m_source,
+                  m_tarball, m_latest):
+        '''
+        Test main execution logic with alternate on
+        '''
+        build_project.sys.argv = ['main', '-a']
+        ret = build_project.main()
+        m_getvars.assert_called_once_with('docker-compose.yml')
+        m_image.assert_not_called
+        m_templates.assert_called_once_with()
+        m_source.assert_called_once_with()
+        m_tarball.assert_called_once_with()
+        m_latest.assert_called_once_with()
