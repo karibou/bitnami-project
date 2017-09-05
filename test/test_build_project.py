@@ -139,7 +139,8 @@ class BuildProjectTests(unittest.TestCase):
         ret = build_project.extract_wp_tarball()
         self.assertFalse(ret)
         output = sys.stdout.getvalue().strip()
-        self.assertEquals(output, 'Unable to extract the tarball :')
+        self.assertEquals(output, 'Extracting new tarball\n'
+                          'Unable to extract the tarball :')
 
     @patch('build_project.os.getcwd', return_value='/home')
     @patch('build_project.docker.from_env')
