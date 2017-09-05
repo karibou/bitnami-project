@@ -1,13 +1,16 @@
 #!/usr/bin/python3
-from urllib.request import urlopen
 import urllib.error
 import os
+import sys
 import tarfile
 import shutil
 import hashlib
 import docker
 import subprocess
 import re
+
+from urllib.request import urlopen
+from jinja2 import FileSystemLoader, Environment, exceptions
 
 wp_latest = {
     'file': 'latest.tar.gz',
@@ -170,6 +173,55 @@ def create_php_fpm_image():
     client.images.build(path=bitnami_dockerfile,
                         tag='php-fpm:%s-custom' % full_image_version)
 
+
+def _getvars(compose_file):
+
+    regex = re.compile(r'MARIADB_.*')
+
+    with open(compose_file, 'r') as compose:
+        lines = compose.read()
+
+    maria_vars = regex.findall(lines)
+    maria_dict = {
+            'mariadb_root_password': 'root-password',
+            'mariadb_database': 'wordpress',
+            'mariadb_user': 'wordpress',
+            'mariadb_password': 'my-password',
+            'mariadb_wp_user': 'wordpress',
+            'mariadb_wp_password': 'wordpress',
+            }
+    for v in maria_vars:
+        [key, item] = v.split('=')
+        maria_dict[key.lower()] = item
+    return maria_dict
+
+
+def render_templates():
+    env = Environment(loader=FileSystemLoader('.'),
+                      lstrip_blocks=True, trim_blocks=True)
+
+    templates = {
+            'wp-config': 'wordpress',
+            'wp_automate': '.',
+            }
+    context = _getvars('docker-compose.yml')
+
+    for template in templates.keys():
+        try:
+            t = env.get_template('%s.template' % template)
+            config = t.render(context)
+            with open('%s/%s.php' % (templates[template],
+                                     template), 'w') as conf:
+                conf.write(config)
+
+        except exceptions.TemplateNotFound as e:
+            print('Could not load %s.template. '
+                  'Using default %s.php' % (template, template))
+            if template == 'wp-config':
+                shutil.copy('%s.php' % template,
+                            '%s/%s.php' % (templates[template], template))
+    print('Custom files setup', end='')
+    return True
 
 if __name__ == '__main__':
     get_latest_wp()
