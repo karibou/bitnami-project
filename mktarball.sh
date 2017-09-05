@@ -1,0 +1,2 @@
+#!/bin/bash
+tar czf bitnami_project.tgz ./bitnami-project/apache-vhost ./bitnami-project/build_project.py ./bitnami-project/docker-compose-alternate.yml ./bitnami-project/docker-compose.yml ./bitnami-project/Makefile ./bitnami-project/php-fpm_entrypoint.sh ./bitnami-project/README.md ./bitnami-project/test ./bitnami-project/wp_automate.php ./bitnami-project/wp_automate.template ./bitnami-project/wp-config.php ./bitnami-project/wp-config.template
