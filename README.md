@@ -2,6 +2,8 @@
 
 # Pre-requisite
 
+The project has been realized using an up-to-date Ubuntu 17.04 Zesty distribution. The latest upstream packages for Docker were used.
+
 ## Native ubuntu Packages
 The following Ubuntu native packages will be required in order for the build_project script to complete correctly :
   * python3-pip firefox
