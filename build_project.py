@@ -222,8 +222,8 @@ def render_templates():
     print('Custom files setup', end='')
     return True
 
-if __name__ == '__main__':
 
+def main():
     if '-a' in sys.argv[1:]:
         alternate = True
     else:
@@ -248,5 +248,9 @@ if __name__ == '__main__':
                     print('You can connect to wordpress with :')
                     print('   username : %s' % vars['mariadb_wp_user'])
                     print('   password : %s' % vars['mariadb_wp_password'])
-                    sys.exit(0)
+                    return True
     print('Giving up')
+    return False
+
+if __name__ == '__main__':
+    main()
