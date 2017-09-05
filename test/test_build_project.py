@@ -13,6 +13,7 @@ class BuildProjectTests(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.wp_latest = build_project.wp_latest
+        self.root = os.getcwd()
         self.fake_file = MagicMock()
         self.fake_md5_hash = MagicMock()
         self.fake_md5_hash.add_spec('hexdigest')
@@ -189,3 +190,4 @@ class BuildProjectTests(unittest.TestCase):
         ret = build_project.create_php_fpm_image()
         self.assertEquals(self.fake_docker.images.build.call_args[1]['tag'],
                           'php-fpm:5.6.31-r0-custom')
+        os.chdir(self.root)
