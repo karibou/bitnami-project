@@ -121,7 +121,7 @@ def create_php_fpm_image():
         return False
 
     try:
-        print('Cloning bitnami''s php-fpm image repository')
+        print('Cloning bitnami\'s php-fpm image repository')
         subprocess.check_call(['git', 'clone', '%s' % bitnami_url],
                               stdout=subprocess.PIPE,
                               stderr=subprocess.PIPE)
