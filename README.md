@@ -27,9 +27,9 @@ curl \
 software-properties-common
 $ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 $ sudo add-apt-repository \
-$    "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
-$    $(lsb_release -cs) \
-$    stable"
+    "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+    $(lsb_release -cs) \
+    stable"
 $ sudo apt-get update
 $ sudo apt-get install docker-ce
 $ sudo adduser ubuntu docker
@@ -42,22 +42,23 @@ And log back in to gain the docker group
 sudo -i
 $ curl -L https://github.com/docker/compose/releases/download/1.15.0/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
 $ chmod 755 /usr/local/bin/docker-compose
+exit
 ```
 ## Python modules
 The docker API and jinja2 are needed by the build_project script. They are installed using pip3:
 
   * Docker API :
 ```
-$ pip3 install docker
+$ sudo pip3 install docker
 ```
   * Jinja2 :
 ```
-$ pip3 install jinja2
+$ sudo pip3 install jinja2
 ```
 ## wordpress.example.com hostname definition
 In order to reach your wordpress service, you will need to add the wordpress.example.com host to your /etc/hosts file:
 ```
-$ echo "127.0.0.1	wordpress.example.com" | sudo tee -a /etc/hosts
+$ echo "127.0.0.1       wordpress.example.com" | sudo tee -a /etc/hosts
 ```
 # Get the project
 
