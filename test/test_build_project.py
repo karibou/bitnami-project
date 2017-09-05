@@ -188,7 +188,9 @@ class BuildProjectTests(unittest.TestCase):
     @patch('build_project.docker.from_env')
     def test_git_repo_dockerfile_fix_with_exception(self, m_docker, m_copy,
                                                     m_sub, m_exists):
-
+        '''
+        Test Dockerfile modification in git repo with exception
+        '''
         os.chdir(self.workdir)
         m_docker.return_value = self.fake_docker
         ret = build_project.create_php_fpm_image()
