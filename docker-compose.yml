@@ -7,6 +7,8 @@ services:
       - MARIADB_USER=wordpress
       - MARIADB_PASSWORD=my-password
       - MARIADB_DATABASE=wordpress
+      - MARIADB_WP_USER=hello
+      - MARIADB_WP_PASSWORD=world
     volumes:
       - ./mariadb-data:/bitnami/mariadb
 
