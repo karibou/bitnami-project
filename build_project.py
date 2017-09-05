@@ -42,7 +42,7 @@ def get_latest_wp():
         # Check if we don't already have the latest file
         if os.path.exists(wp_latest['file']):
             if check_md5_ok(wp_latest['file'], latest_md5):
-                print('We have the latest %s' % wp_latest['file'])
+                print('We have the latest %s' % wp_latest['file'], end='')
                 return True
             else:
                 print('Current %s MD5 do not match' % wp_latest['file'])
@@ -55,7 +55,7 @@ def get_latest_wp():
                 tarball.write(tarball_resp.read())
 
         if check_md5_ok(wp_latest['file'], latest_md5):
-            print('We have the latest %s' % wp_latest['file'])
+            print('We have the latest %s' % wp_latest['file'], end='')
             return True
         else:
             print('Unable to get %s that matches %s' % (wp_latest['file'],
@@ -65,9 +65,8 @@ def get_latest_wp():
     except (urllib.error.URLError,
             urllib.error.HTTPError,
             ConnectionResetError) as err:
-        print('Unable to fetch MD5 value : %s' % err)
-        print('Using the current file')
-        return
+        print('Unable to fetch MD5 value or tarball')
+        return False
 
 
 def extract_wp_tarball():
@@ -83,25 +82,26 @@ def extract_wp_tarball():
         return False
 
     try:
+        print('Extracting new tarball', end='')
         new_wp = tarfile.open(wp_latest['file'], 'r')
         new_wp.extractall()
         new_wp.close()
+        return True
 
     except tarfile.TarError as tarerr:
-        print('Unable to extract the tarball : %s' % tarerr)
+        print('\nUnable to extract the tarball : %s' % tarerr)
         return False
-    return True
 
 
 def setup_wp_source_tree():
     home = os.getcwd()
     wp_root = '%s/wordpress' % home
-    shutil.copy('./wp-config.php', './wordpress/wp-config.php')
-
     client = docker.from_env()
+    print('Setting up source tree permissions', end='')
     client.containers.run('ubuntu:latest',
                           volumes={wp_root: {'bind': '/app'}},
                           command=['chown', '-R', ':daemon', '/app/'])
+    return True
 
 
 def create_php_fpm_image():
@@ -127,7 +127,6 @@ def create_php_fpm_image():
                               stderr=subprocess.PIPE)
     except subprocess.CalledProcessError as err:
         print('Unable to clone php-fpm git repository : %s' % err)
-        print('Giving up')
         return False
 
     try:
@@ -137,10 +136,9 @@ def create_php_fpm_image():
                                                    file))
     except OSError as err:
         print('Unable to copy custom files in repository : %s' % err)
-        print('Giving up')
         return False
 
-    print('Building new docker custom php-fpm image')
+    print('Building new docker custom php-fpm image', end='')
 
     version_regex = re.compile(r'BITNAMI_IMAGE_VERSION')
     entrypoint_regex = re.compile(r'^ENTRYPOINT')
@@ -163,7 +161,7 @@ def create_php_fpm_image():
                 newfile.write(line)
 
     except OSError as err:
-        print('Unable to find image version in Dockerfile.')
+        print('\nUnable to find image version in Dockerfile.')
         print('Will use high level %s version' % php_fpm_version)
         print('the docker-compose.yml will need to be changed with :')
         print('php-fpm:\n  image: php-fpm:%s-custom' % php_fpm_version)
@@ -172,6 +170,7 @@ def create_php_fpm_image():
     client = docker.from_env()
     client.images.build(path=bitnami_dockerfile,
                         tag='php-fpm:%s-custom' % full_image_version)
+    return True
 
 
 def _getvars(compose_file):
@@ -224,7 +223,19 @@ def render_templates():
     return True
 
 if __name__ == '__main__':
-    get_latest_wp()
-    extract_wp_tarball()
-    setup_wp_source_tree()
-    create_php_fpm_image()
+
+    if get_latest_wp():
+        print('...Done.')
+        if extract_wp_tarball():
+            print('...Done.')
+            if setup_wp_source_tree():
+                print('...Done.')
+                if render_templates():
+                    print('...Done.')
+                    create_php_fpm_image()
+                    print('...Done')
+                    print('Project creation completed')
+                    print('Use the following command to start the service :')
+                    print('    docker-compose up')
+                    sys.exit(0)
+    print('Giving up')
