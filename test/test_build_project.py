@@ -215,7 +215,7 @@ class BuildProjectTests(unittest.TestCase):
         '''
         Test template rendering for wp-config.php and wp_automate.php
         '''
-        os.mkdir(os.path.join(self.workdir,'wordpress'))
+        os.mkdir(os.path.join(self.workdir, 'wordpress'))
         shutil.copy('wp_automate.template', self.workdir)
         shutil.copy('wp-config.template', self.workdir)
         os.chdir(self.workdir)
@@ -225,10 +225,10 @@ class BuildProjectTests(unittest.TestCase):
         self.assertTrue(os.path.exists(os.path.join(self.workdir,
                                                     'wordpress',
                                                     'wp-config.php')))
-        with open(os.path.join(self.workdir,'wp_automate.php')) as automate:
+        with open(os.path.join(self.workdir, 'wp_automate.php')) as automate:
             lines = automate.read()
         self.assertRegexpMatches(lines, r'0xdead')
-        with open(os.path.join(self.workdir,'wordpress','wp-config.php')
+        with open(os.path.join(self.workdir, 'wordpress', 'wp-config.php')
                   ) as config:
             lines = config.read()
         self.assertRegexpMatches(lines, r'0xbeef')
@@ -262,7 +262,7 @@ class BuildProjectTests(unittest.TestCase):
     @patch('build_project._getvars', return_value={'mariadb_wp_user': 'a',
                                                    'mariadb_wp_password': 'b'})
     def test_main_alt(self, m_getvars, m_image, m_templates, m_source,
-                  m_tarball, m_latest):
+                      m_tarball, m_latest):
         '''
         Test main execution logic with alternate on
         '''

@@ -244,13 +244,14 @@ def main():
                     print('Use the following command to start the service :')
                     print('    docker-compose up')
                     print('')
-                    vars=_getvars('docker-compose.yml')
+                    vars = _getvars('docker-compose.yml')
                     print('You can connect to wordpress with :')
                     print('   username : %s' % vars['mariadb_wp_user'])
                     print('   password : %s' % vars['mariadb_wp_password'])
                     return True
     print('Giving up')
     return False
+
 
 if __name__ == '__main__':
     main()
