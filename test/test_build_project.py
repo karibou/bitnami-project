@@ -141,9 +141,8 @@ class BuildProjectTests(unittest.TestCase):
         self.assertEquals(output, 'Unable to extract the tarball :')
 
     @patch('build_project.os.getcwd', return_value='/home')
-    @patch('build_project.shutil.copy')
     @patch('build_project.docker.from_env')
-    def test_setup_wp_tree(self, m_docker, m_copy, m_cwd):
+    def test_setup_wp_tree(self, m_docker, m_cwd):
         '''
         Test wp source tree setup
         '''
