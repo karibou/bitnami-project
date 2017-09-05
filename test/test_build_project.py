@@ -175,6 +175,9 @@ class BuildProjectTests(unittest.TestCase):
     @patch('build_project.shutil.copy', side_effect=OSError)
     def test_git_repo_customfile_copy_with_exception(self,
                                                      m_copy, m_sub, m_exists):
+        '''
+        Test git repo creation, custom file copy with exception
+        '''
         ret = build_project.create_php_fpm_image()
         self.assertFalse(ret)
 
