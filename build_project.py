@@ -105,7 +105,7 @@ def setup_wp_source_tree():
     return True
 
 
-def create_php_fpm_image():
+def create_php_fpm_image(wants_network=False):
     bitnami_url = 'https://github.com/bitnami/bitnami-docker-php-fpm.git'
     bitnami_repo = 'bitnami-docker-php-fpm'
     php_fpm_version = '5.6'
@@ -129,6 +129,9 @@ def create_php_fpm_image():
     except subprocess.CalledProcessError as err:
         print('Unable to clone php-fpm git repository : %s' % err)
         return False
+
+    if wants_network:
+        custom_files += ['wp_enable_network.php']
 
     try:
         for file in custom_files:
@@ -196,7 +199,7 @@ def _getvars(compose_file):
     return maria_dict
 
 
-def render_templates():
+def render_templates(wants_multisite=False, wants_subdomain=False):
     env = Environment(loader=FileSystemLoader('.'),
                       lstrip_blocks=True, trim_blocks=True)
 
@@ -205,6 +208,17 @@ def render_templates():
             'wp_automate.php': '.',
             }
     context = _getvars('docker-compose.yml')
+
+    if wants_multisite:
+        context['multisite'] = True
+        templates['.htaccess'] = 'wordpress'
+    else:
+        context['multisite'] = False
+
+    if wants_subdomain:
+        context['subdomain'] = True
+    else:
+        context['subdomain'] = False
 
     for template in templates.keys():
         try:
@@ -241,7 +255,7 @@ def main():
             print('...Done.')
             if setup_wp_source_tree():
                 print('...Done.')
-                if render_templates():
+                if render_templates(args.multisite, args.subdomain):
                     print('...Done.')
                     if not args.alternate:
                         create_php_fpm_image()
