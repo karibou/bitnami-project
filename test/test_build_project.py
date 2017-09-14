@@ -6,6 +6,7 @@ import shutil
 import tarfile
 import subprocess
 import tempfile
+import argparse
 from unittest.mock import patch, MagicMock
 
 
@@ -249,6 +250,7 @@ class BuildProjectTests(unittest.TestCase):
         '''
         Test main execution logic
         '''
+        build_project.sys.argv = ['main', ]
         ret = build_project.main()
         m_getvars.assert_called_once_with('docker-compose.yml')
         m_image.assert_called_once_with()
@@ -266,15 +268,23 @@ class BuildProjectTests(unittest.TestCase):
     @patch('build_project._getvars', return_value={'mariadb_wp_user': 'a',
                                                    'mariadb_wp_password': 'b'})
     def test_main_alt(self, m_getvars, m_image, m_templates, m_source,
-                      m_tarball, m_latest):
+                      m_tarball, m_latest, m_argparse):
         '''
         Test main execution logic with alternate on
         '''
         build_project.sys.argv = ['main', '-a']
+        args = argparse.Namespace()
+        args.alternate = True
+        args.multisite = False
+        args.subdomain = False
+        m_argparse.return_value = args
         ret = build_project.main()
         m_getvars.assert_called_once_with('docker-compose.yml')
         m_image.assert_not_called
         m_templates.assert_called_once_with()
+        m_source.assert_called_once_with()
+        m_tarball.assert_called_once_with()
+        m_latest.assert_called_once_with()
         m_source.assert_called_once_with()
         m_tarball.assert_called_once_with()
         m_latest.assert_called_once_with()
