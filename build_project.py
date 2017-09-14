@@ -258,7 +258,7 @@ def main():
                 if render_templates(args.multisite, args.subdomain):
                     print('...Done.')
                     if not args.alternate:
-                        create_php_fpm_image()
+                        create_php_fpm_image(args.multisite)
                         print('...Done')
                     print('Project creation completed')
                     print('Use the following command to start the service :')
