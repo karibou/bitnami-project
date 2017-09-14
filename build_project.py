@@ -8,6 +8,7 @@ import hashlib
 import docker
 import subprocess
 import re
+import argparse
 
 from urllib.request import urlopen
 from jinja2 import FileSystemLoader, Environment, exceptions
@@ -224,10 +225,17 @@ def render_templates():
 
 
 def main():
-    if '-a' in sys.argv[1:]:
-        alternate = True
-    else:
-        alternate = False
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-a', '--alternate',
+                        help='Use alternate deployment method',
+                        action='store_true', default=False)
+    parser.add_argument('-m', '--multisite',
+                        help='Enable Wordpress multisite',
+                        action='store_true', default=False)
+    parser.add_argument('-s', '--subdomain',
+                        help='Enable Wordpress multisite in subdomain mode',
+                        action='store_true', default=False)
+    args = parser.parse_args()
 
     if get_latest_wp():
         print('...Done.')
@@ -237,7 +245,7 @@ def main():
                 print('...Done.')
                 if render_templates():
                     print('...Done.')
-                    if not alternate:
+                    if not args.alternate:
                         create_php_fpm_image()
                         print('...Done')
                     print('Project creation completed')

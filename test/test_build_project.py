@@ -254,6 +254,7 @@ class BuildProjectTests(unittest.TestCase):
         m_tarball.assert_called_once_with()
         m_latest.assert_called_once_with()
 
+    @patch('argparse.ArgumentParser.parse_args')
     @patch('build_project.get_latest_wp', return_value=True)
     @patch('build_project.extract_wp_tarball', return_value=True)
     @patch('build_project.setup_wp_source_tree', return_value=True)
