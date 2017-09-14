@@ -7,3 +7,4 @@ clean:
 	rm -Rf latest.tar.gz mariadb-data wordpress
 	docker container prune --force
 	docker-compose rm --force
+	docker image rm php-fpm:5.6.31-r0-custom
