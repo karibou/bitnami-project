@@ -205,7 +205,19 @@ class BuildProjectTests(unittest.TestCase):
         ret = build_project.create_php_fpm_image()
         self.assertEquals(self.fake_docker.images.build.call_args[1]['tag'],
                           'php-fpm:5.6.31-r0-custom')
-        os.chdir(self.root)
+
+    @patch('build_project.os.path.exists', return_value=False)
+    @patch('build_project.subprocess.check_call')
+    @patch('build_project.shutil.copy')
+    @patch('build_project.docker.from_env')
+    def test_git_repo_custom_files_with_multisite(self, m_docker, m_copy,
+                                                  m_sub, m_exists):
+        '''
+        Test custom files copy with multisite enabled and exception
+        '''
+        os.chdir(self.workdir)
+        ret = build_project.create_php_fpm_image(True)
+        self.assertEquals(m_copy.call_count, 3)
 
     def test_getvars(self):
         '''
@@ -237,6 +249,67 @@ class BuildProjectTests(unittest.TestCase):
                   ) as config:
             lines = config.read()
         self.assertRegexpMatches(lines, r'0xbeef')
+        self.assertNotRegex(lines, r'MULTISITE')
+
+    def test_template_rendering_multisite(self):
+        '''
+        Test multisite template rendering for wp-config.php and wp_automate.php
+        '''
+        os.mkdir(os.path.join(self.workdir, 'wordpress'))
+        shutil.copy('wp_automate.template', self.workdir)
+        shutil.copy('wp-config.template', self.workdir)
+        shutil.copy('.htaccess.template', self.workdir)
+        os.chdir(self.workdir)
+        ret = build_project.render_templates(True)
+        self.assertTrue(os.path.exists(os.path.join(self.workdir,
+                                                    'wp_automate.php')))
+        self.assertTrue(os.path.exists(os.path.join(self.workdir,
+                                                    'wordpress',
+                                                    'wp-config.php')))
+        with open(os.path.join(self.workdir, 'wp_automate.php')) as automate:
+            lines = automate.read()
+        self.assertRegexpMatches(lines, r'0xdead')
+        with open(os.path.join(self.workdir, 'wordpress', 'wp-config.php')
+                  ) as config:
+            lines = config.read()
+        self.assertRegexpMatches(lines, r'0xbeef')
+        self.assertRegex(lines, r'MULTISITE')
+        self.assertRegex(lines, r"SUBDOMAIN_INSTALL', false")
+        self.assertTrue(os.path.exists(os.path.join(self.workdir,
+                                                    'wordpress',
+                                                    '.htaccess')))
+
+    def test_template_rendering_multisite_subdomain(self):
+        '''
+        Test multisite template rendering with subdomain for wp-config.php
+        '''
+        os.mkdir(os.path.join(self.workdir, 'wordpress'))
+        shutil.copy('wp_automate.template', self.workdir)
+        shutil.copy('wp-config.template', self.workdir)
+        os.chdir(self.workdir)
+        ret = build_project.render_templates(True, True)
+        self.assertTrue(os.path.exists(os.path.join(self.workdir,
+                                                    'wp_automate.php')))
+        self.assertTrue(os.path.exists(os.path.join(self.workdir,
+                                                    'wordpress',
+                                                    'wp-config.php')))
+        with open(os.path.join(self.workdir, 'wp_automate.php')) as automate:
+            lines = automate.read()
+        self.assertRegexpMatches(lines, r'0xdead')
+        with open(os.path.join(self.workdir, 'wordpress', 'wp-config.php')
+                  ) as config:
+            lines = config.read()
+        self.assertRegexpMatches(lines, r'0xbeef')
+        self.assertRegex(lines, r'MULTISITE')
+        self.assertRegex(lines, r"SUBDOMAIN_INSTALL', true")
+
+    def test_missing_rendering_templates(self):
+        '''
+        Test missing template error handling
+        '''
+        os.chdir(self.workdir)
+        ret = build_project.render_templates(False, False)
+        self.assertFalse(ret)
 
     @patch('build_project.get_latest_wp', return_value=True)
     @patch('build_project.extract_wp_tarball', return_value=True)
@@ -254,7 +327,7 @@ class BuildProjectTests(unittest.TestCase):
         ret = build_project.main()
         m_getvars.assert_called_once_with('docker-compose.yml')
         m_image.assert_called_once_with()
-        m_templates.assert_called_once_with()
+        m_templates.assert_called_once_with(False, False)
         m_source.assert_called_once_with()
         m_tarball.assert_called_once_with()
         m_latest.assert_called_once_with()
@@ -281,10 +354,28 @@ class BuildProjectTests(unittest.TestCase):
         ret = build_project.main()
         m_getvars.assert_called_once_with('docker-compose.yml')
         m_image.assert_not_called
-        m_templates.assert_called_once_with()
+        m_templates.assert_called_once_with(False, False)
         m_source.assert_called_once_with()
         m_tarball.assert_called_once_with()
         m_latest.assert_called_once_with()
+
+    @patch('build_project.get_latest_wp', return_value=True)
+    @patch('build_project.extract_wp_tarball', return_value=True)
+    @patch('build_project.setup_wp_source_tree', return_value=True)
+    @patch('build_project.render_templates', return_value=True)
+    @patch('build_project.create_php_fpm_image', return_value=True)
+    @patch('build_project._getvars', return_value={'mariadb_wp_user': 'a',
+                                                   'mariadb_wp_password': 'b'})
+    def test_main_multisite(self, m_getvars, m_image, m_templates, m_source,
+                            m_tarball, m_latest):
+        '''
+        Test main execution logic with multisite on
+        '''
+        build_project.sys.argv = ['main', '-m']
+        ret = build_project.main()
+        m_getvars.assert_called_once_with('docker-compose.yml')
+        m_image.assert_called_once_with()
+        m_templates.assert_called_once_with(True, False)
         m_source.assert_called_once_with()
         m_tarball.assert_called_once_with()
         m_latest.assert_called_once_with()
