@@ -39,6 +39,11 @@ class BuildProjectTests(unittest.TestCase):
     def tearDownClass(self):
         shutil.rmtree(self.workdir)
 
+    def tearDown(self):
+        os.chdir(self.root)
+        if os.path.exists(os.path.join(self.workdir, 'wordpress')):
+            shutil.rmtree(os.path.join(self.workdir, 'wordpress'))
+
     @patch('builtins.open')
     @patch('build_project.hashlib.md5')
     def test_check_md5_ok(self, m_md5, m_open):
@@ -209,7 +214,6 @@ class BuildProjectTests(unittest.TestCase):
         ret = build_project._getvars('docker-compose.yml')
         self.assertEquals(ret['mariadb_user'], '0xdead')
         self.assertEquals(ret['mariadb_password'], '0xbeef')
-        os.chdir(self.root)
 
     def test_template_rendering(self):
         '''
@@ -232,7 +236,6 @@ class BuildProjectTests(unittest.TestCase):
                   ) as config:
             lines = config.read()
         self.assertRegexpMatches(lines, r'0xbeef')
-        os.chdir(self.root)
 
     @patch('build_project.get_latest_wp', return_value=True)
     @patch('build_project.extract_wp_tarball', return_value=True)
