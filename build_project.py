@@ -201,25 +201,23 @@ def render_templates():
                       lstrip_blocks=True, trim_blocks=True)
 
     templates = {
-            'wp-config': 'wordpress',
-            'wp_automate': '.',
+            'wp-config.php': 'wordpress',
+            'wp_automate.php': '.',
             }
     context = _getvars('docker-compose.yml')
 
     for template in templates.keys():
         try:
-            t = env.get_template('%s.template' % template)
+            tmpl_name = template.rstrip('.php')
+            t = env.get_template('%s.template' % tmpl_name)
             config = t.render(context)
-            with open('%s/%s.php' % (templates[template],
-                                     template), 'w') as conf:
+            with open('%s/%s' % (templates[template],
+                                 template), 'w') as conf:
                 conf.write(config)
 
         except exceptions.TemplateNotFound as e:
-            print('Could not load %s.template. '
-                  'Using default %s.php' % (template, template))
-            if template == 'wp-config':
-                shutil.copy('%s.php' % template,
-                            '%s/%s.php' % (templates[template], template))
+            print('Could not load %s.template. ' % tmpl_name)
+            return False
     print('Custom files setup', end='')
     return True
 
