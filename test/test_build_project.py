@@ -33,8 +33,11 @@ class BuildProjectTests(unittest.TestCase):
             dfile.write('ENTRYPOINT ["/php-fpm_entrypoint.sh"]\n')
         self.compose = os.path.join(self.workdir, 'docker-compose.yml')
         with open(self.compose, 'w') as cfile:
-            cfile.write('start\nMARIADB_USER=0xdead\n'
-                        'MARIADB_PASSWORD=0xbeef\nend\n')
+            cfile.write('start\nMARIADB_USER=0xdead\nMARIADB_PASSWORD=0xbeef\n'
+                        'MARIADB_ROOT_PASSWORD=root\nMARIADB_DATABASE=db\n'
+                        'WP_USER=hello\nWP_PASSWORD=world\n'
+                        'WP_EMAIL=root@localhost\nWP_SITE_NAME=One Project\n'
+                        'end\n')
 
     @classmethod
     def tearDownClass(self):
@@ -227,6 +230,12 @@ class BuildProjectTests(unittest.TestCase):
         ret = build_project._getvars('docker-compose.yml')
         self.assertEquals(ret['mariadb_user'], '0xdead')
         self.assertEquals(ret['mariadb_password'], '0xbeef')
+        self.assertEquals(ret['mariadb_root_password'], 'root')
+        self.assertEquals(ret['mariadb_database'], 'db')
+        self.assertEquals(ret['wp_user'], 'hello')
+        self.assertEquals(ret['wp_password'], 'world')
+        self.assertEquals(ret['wp_email'], 'root@localhost')
+        self.assertEquals(ret['wp_site_name'], 'One Project')
 
     def test_template_rendering(self):
         '''
@@ -316,8 +325,8 @@ class BuildProjectTests(unittest.TestCase):
     @patch('build_project.setup_wp_source_tree', return_value=True)
     @patch('build_project.render_templates', return_value=True)
     @patch('build_project.create_php_fpm_image', return_value=True)
-    @patch('build_project._getvars', return_value={'mariadb_wp_user': 'a',
-                                                   'mariadb_wp_password': 'b'})
+    @patch('build_project._getvars', return_value={'wp_user': 'a',
+                                                   'wp_password': 'b'})
     def test_main(self, m_getvars, m_image, m_templates, m_source,
                   m_tarball, m_latest):
         '''
@@ -338,8 +347,8 @@ class BuildProjectTests(unittest.TestCase):
     @patch('build_project.setup_wp_source_tree', return_value=True)
     @patch('build_project.render_templates', return_value=True)
     @patch('build_project.create_php_fpm_image', return_value=True)
-    @patch('build_project._getvars', return_value={'mariadb_wp_user': 'a',
-                                                   'mariadb_wp_password': 'b'})
+    @patch('build_project._getvars', return_value={'wp_user': 'a',
+                                                   'wp_password': 'b'})
     def test_main_alt(self, m_getvars, m_image, m_templates, m_source,
                       m_tarball, m_latest, m_argparse):
         '''
@@ -364,8 +373,8 @@ class BuildProjectTests(unittest.TestCase):
     @patch('build_project.setup_wp_source_tree', return_value=True)
     @patch('build_project.render_templates', return_value=True)
     @patch('build_project.create_php_fpm_image', return_value=True)
-    @patch('build_project._getvars', return_value={'mariadb_wp_user': 'a',
-                                                   'mariadb_wp_password': 'b'})
+    @patch('build_project._getvars', return_value={'wp_user': 'a',
+                                                   'wp_password': 'b'})
     def test_main_multisite(self, m_getvars, m_image, m_templates, m_source,
                             m_tarball, m_latest):
         '''

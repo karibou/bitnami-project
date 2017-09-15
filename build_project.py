@@ -179,24 +179,26 @@ def create_php_fpm_image(wants_network=False):
 
 def _getvars(compose_file):
 
-    regex = re.compile(r'MARIADB_.*')
+    regex = re.compile(r'MARIADB_.*|WP_.*')
 
     with open(compose_file, 'r') as compose:
         lines = compose.read()
 
-    maria_vars = regex.findall(lines)
-    maria_dict = {
+    project_vars = regex.findall(lines)
+    project_dict = {
             'mariadb_root_password': 'root-password',
             'mariadb_database': 'wordpress',
             'mariadb_user': 'wordpress',
             'mariadb_password': 'my-password',
-            'mariadb_wp_user': 'wordpress',
-            'mariadb_wp_password': 'wordpress',
+            'wp_user': 'wordpress',
+            'wp_password': 'wordpress',
+            'wp_email': 'you@example.com',
+            'wp_site_name': 'My Bitnami Project',
             }
-    for v in maria_vars:
+    for v in project_vars:
         [key, item] = v.split('=')
-        maria_dict[key.lower()] = item
-    return maria_dict
+        project_dict[key.lower()] = item
+    return project_dict
 
 
 def render_templates(wants_multisite=False, wants_subdomain=False):
@@ -266,8 +268,8 @@ def main():
                     print('')
                     vars = _getvars('docker-compose.yml')
                     print('You can connect to wordpress with :')
-                    print('   username : %s' % vars['mariadb_wp_user'])
-                    print('   password : %s' % vars['mariadb_wp_password'])
+                    print('   username : %s' % vars['wp_user'])
+                    print('   password : %s' % vars['wp_password'])
                     return True
     print('Giving up')
     return False
