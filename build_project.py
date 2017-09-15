@@ -131,7 +131,7 @@ def create_php_fpm_image(wants_network=False):
         return False
 
     if wants_network:
-        custom_files += ['wp_enable_network.php']
+        custom_files += ['wp_enable_network']
 
     try:
         for file in custom_files:
@@ -214,6 +214,7 @@ def render_templates(wants_multisite=False, wants_subdomain=False):
     if wants_multisite:
         context['multisite'] = True
         templates['.htaccess'] = 'wordpress'
+        templates['wp_enable_network'] = '.'
     else:
         context['multisite'] = False
 
@@ -230,6 +231,8 @@ def render_templates(wants_multisite=False, wants_subdomain=False):
             with open('%s/%s' % (templates[template],
                                  template), 'w') as conf:
                 conf.write(config)
+            if template == 'wp_enable_network':
+                os.chmod('%s/%s' % (templates[template], template), 0o750)
 
         except exceptions.TemplateNotFound as e:
             print('Could not load %s.template. ' % tmpl_name)
