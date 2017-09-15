@@ -1,9 +1,37 @@
 #!/bin/bash
 
-curl -X POST -F '_wpnonce="deadbeef"' \
-	     -F '_wp_http_referer="/wp-admin/network.php"' \
-	     -F 'subdomain_install="1"' \
-	     -F 'sitename="My Bitnami Project Sites"' \
-	     -F 'email="root@localhost"' \
-	     -F 'submit="Install"' \
-	     http://apache/wp-admin/network.php
+# log into the admin dashboard
+curl "http://apache/wp-login.php" \
+  -c /tmp/wp-cookies.txt \
+  --data-urlencode "log={{ wp_user }}" \
+  --data-urlencode "pwd={{ wp_password }}"
+
+# get the csrf token
+curl -s "http://apache/wp-admin/network.php" -b /tmp/wp-cookies.txt \
+  | grep -Eo '_wpnonce" value="\w+"' | cut -d '"' -f 3 > /tmp/wp-nonce.txt
+
+# convert wordpress to multi site wordpress
+curl "http://apache/wp-admin/network.php" \
+  -b /tmp/wp-cookies.txt \
+  --data-urlencode "sitename={{ wp_site_name }}" \
+  --data-urlencode "email={{ wp_email }}" \
+  {% if subdomain %}
+  --data-urlencode "subdomain_install=1" \
+  {% else %}
+  --data-urlencode "subdomain_install=0" \
+  {% endif %}
+  --data-urlencode "_wpnonce=$(cat /tmp/wp-nonce.txt)"
+
+# logout twice to complete the migration to multisite
+for I in $(seq 2);do
+	curl "http://apache/wp-login.php" \
+	-b /tmp/wp-cookies.txt \
+	--data-urlencode "action=logout" \
+	--data-urlencode "_wpnonce=$(cat /tmp/wp-nonce.txt)"
+done
+
+# complete the configuration of wp-config.php
+sed -i 's/\/\* to be removed//' wp-config.php
+sed -i 's/to be removed \*\///' wp-config.php
+
+rm -f /tmp/wp-cookies.txt /tmp/wp-nonce.txt

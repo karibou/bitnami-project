@@ -268,6 +268,7 @@ class BuildProjectTests(unittest.TestCase):
         shutil.copy('wp_automate.template', self.workdir)
         shutil.copy('wp-config.template', self.workdir)
         shutil.copy('.htaccess.template', self.workdir)
+        shutil.copy('wp_enable_network.template', self.workdir)
         os.chdir(self.workdir)
         ret = build_project.render_templates(True)
         self.assertTrue(os.path.exists(os.path.join(self.workdir,
@@ -287,6 +288,8 @@ class BuildProjectTests(unittest.TestCase):
         self.assertTrue(os.path.exists(os.path.join(self.workdir,
                                                     'wordpress',
                                                     '.htaccess')))
+        self.assertTrue(os.path.exists(os.path.join(self.workdir,
+                                                    'wp_enable_network')))
 
     def test_template_rendering_multisite_subdomain(self):
         '''
@@ -295,6 +298,7 @@ class BuildProjectTests(unittest.TestCase):
         os.mkdir(os.path.join(self.workdir, 'wordpress'))
         shutil.copy('wp_automate.template', self.workdir)
         shutil.copy('wp-config.template', self.workdir)
+        shutil.copy('wp_enable_network.template', self.workdir)
         os.chdir(self.workdir)
         ret = build_project.render_templates(True, True)
         self.assertTrue(os.path.exists(os.path.join(self.workdir,
