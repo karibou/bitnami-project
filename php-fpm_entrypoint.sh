@@ -20,8 +20,4 @@ if [ -f /wp_automate.php ]; then
     /opt/bitnami/php/bin/php /wp_automate.php 2> /dev/null
 fi
 
-if [ -f /wp_enable_network.php ]; then
-    /wp_enable_network.php 2> /dev/null
-fi
-
 exec /app-entrypoint.sh "$@"
