@@ -79,6 +79,22 @@ $table_prefix  = 'wp_';
  */
 define('WP_DEBUG', false);
 
+{% if multisite %}
+/* Multisite */
+define( 'WP_ALLOW_MULTISITE', true );
+/* to be removed
+define( 'MULTISITE', true );
+{% if subdomain %}
+define('SUBDOMAIN_INSTALL', true);
+{% else %}
+define('SUBDOMAIN_INSTALL', false);
+{% endif %}
+define('DOMAIN_CURRENT_SITE', 'wordpress.example.com');
+define('PATH_CURRENT_SITE', '/');
+define('SITE_ID_CURRENT_SITE', 1);
+define('BLOG_ID_CURRENT_SITE', 1);
+{% endif %}
+to be removed */
 /* That's all, stop editing! Happy blogging. */
 
 /** Absolute path to the WordPress directory. */

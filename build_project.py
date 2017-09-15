@@ -8,6 +8,7 @@ import hashlib
 import docker
 import subprocess
 import re
+import argparse
 
 from urllib.request import urlopen
 from jinja2 import FileSystemLoader, Environment, exceptions
@@ -104,7 +105,7 @@ def setup_wp_source_tree():
     return True
 
 
-def create_php_fpm_image():
+def create_php_fpm_image(wants_network=False):
     bitnami_url = 'https://github.com/bitnami/bitnami-docker-php-fpm.git'
     bitnami_repo = 'bitnami-docker-php-fpm'
     php_fpm_version = '5.6'
@@ -128,6 +129,9 @@ def create_php_fpm_image():
     except subprocess.CalledProcessError as err:
         print('Unable to clone php-fpm git repository : %s' % err)
         return False
+
+    if wants_network:
+        custom_files += ['wp_enable_network']
 
     try:
         for file in custom_files:
@@ -175,59 +179,80 @@ def create_php_fpm_image():
 
 def _getvars(compose_file):
 
-    regex = re.compile(r'MARIADB_.*')
+    regex = re.compile(r'MARIADB_.*|WP_.*')
 
     with open(compose_file, 'r') as compose:
         lines = compose.read()
 
-    maria_vars = regex.findall(lines)
-    maria_dict = {
+    project_vars = regex.findall(lines)
+    project_dict = {
             'mariadb_root_password': 'root-password',
             'mariadb_database': 'wordpress',
             'mariadb_user': 'wordpress',
             'mariadb_password': 'my-password',
-            'mariadb_wp_user': 'wordpress',
-            'mariadb_wp_password': 'wordpress',
+            'wp_user': 'wordpress',
+            'wp_password': 'wordpress',
+            'wp_email': 'you@example.com',
+            'wp_site_name': 'My Bitnami Project',
             }
-    for v in maria_vars:
+    for v in project_vars:
         [key, item] = v.split('=')
-        maria_dict[key.lower()] = item
-    return maria_dict
+        project_dict[key.lower()] = item
+    return project_dict
 
 
-def render_templates():
+def render_templates(wants_multisite=False, wants_subdomain=False):
     env = Environment(loader=FileSystemLoader('.'),
                       lstrip_blocks=True, trim_blocks=True)
 
     templates = {
-            'wp-config': 'wordpress',
-            'wp_automate': '.',
+            'wp-config.php': 'wordpress',
+            'wp_automate.php': '.',
             }
     context = _getvars('docker-compose.yml')
 
+    if wants_multisite:
+        context['multisite'] = True
+        templates['.htaccess'] = 'wordpress'
+        templates['wp_enable_network'] = '.'
+    else:
+        context['multisite'] = False
+
+    if wants_subdomain:
+        context['subdomain'] = True
+    else:
+        context['subdomain'] = False
+
     for template in templates.keys():
         try:
-            t = env.get_template('%s.template' % template)
+            tmpl_name = template.rstrip('.php')
+            t = env.get_template('%s.template' % tmpl_name)
             config = t.render(context)
-            with open('%s/%s.php' % (templates[template],
-                                     template), 'w') as conf:
+            with open('%s/%s' % (templates[template],
+                                 template), 'w') as conf:
                 conf.write(config)
+            if template == 'wp_enable_network':
+                os.chmod('%s/%s' % (templates[template], template), 0o750)
 
         except exceptions.TemplateNotFound as e:
-            print('Could not load %s.template. '
-                  'Using default %s.php' % (template, template))
-            if template == 'wp-config':
-                shutil.copy('%s.php' % template,
-                            '%s/%s.php' % (templates[template], template))
+            print('Could not load %s.template. ' % tmpl_name)
+            return False
     print('Custom files setup', end='')
     return True
 
 
 def main():
-    if '-a' in sys.argv[1:]:
-        alternate = True
-    else:
-        alternate = False
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-a', '--alternate',
+                        help='Use alternate deployment method',
+                        action='store_true', default=False)
+    parser.add_argument('-m', '--multisite',
+                        help='Enable Wordpress multisite',
+                        action='store_true', default=False)
+    parser.add_argument('-s', '--subdomain',
+                        help='Enable Wordpress multisite in subdomain mode',
+                        action='store_true', default=False)
+    args = parser.parse_args()
 
     if get_latest_wp():
         print('...Done.')
@@ -235,10 +260,10 @@ def main():
             print('...Done.')
             if setup_wp_source_tree():
                 print('...Done.')
-                if render_templates():
+                if render_templates(args.multisite, args.subdomain):
                     print('...Done.')
-                    if not alternate:
-                        create_php_fpm_image()
+                    if not args.alternate:
+                        create_php_fpm_image(args.multisite)
                         print('...Done')
                     print('Project creation completed')
                     print('Use the following command to start the service :')
@@ -246,8 +271,8 @@ def main():
                     print('')
                     vars = _getvars('docker-compose.yml')
                     print('You can connect to wordpress with :')
-                    print('   username : %s' % vars['mariadb_wp_user'])
-                    print('   password : %s' % vars['mariadb_wp_password'])
+                    print('   username : %s' % vars['wp_user'])
+                    print('   password : %s' % vars['wp_password'])
                     return True
     print('Giving up')
     return False

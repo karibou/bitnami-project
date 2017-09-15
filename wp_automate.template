@@ -11,15 +11,15 @@ if ($db=($GLOBALS["___mysqli_ston"] = mysqli_connect("mariadb", "{{ mariadb_user
     require_once('/app/wp-config.php');
     require_once('/app/wp-admin/upgrade-functions.php');
 
-    $weblog_title = stripslashes("My Bitnami Project");
-    $admin_email = stripslashes("root@localhost");
-    $user = stripslashes('{{ mariadb_wp_user }}');
+    $weblog_title = stripslashes("{{ wp_site_name }}");
+    $admin_email = stripslashes("{{ wp_email }}");
+    $user = stripslashes('{{ wp_user }}');
     $result = wp_install($weblog_title,$user,$admin_email,1);
     extract($result, EXTR_SKIP);
 
 
     ((bool)mysqli_query($db, "USE " . {{ mariadb_database }}));
-    mysqli_query($GLOBALS["___mysqli_ston"], "UPDATE wp_users SET user_pass = MD5('{{ mariadb_wp_password }}') WHERE wp_users.ID=1 LIMIT 1");
+    mysqli_query($GLOBALS["___mysqli_ston"], "UPDATE wp_users SET user_pass = MD5('{{ wp_password }}') WHERE wp_users.ID=1 LIMIT 1");
     mysqli_query($GLOBALS["___mysqli_ston"], "UPDATE wp_options SET option_value = 'http://wordpress.example.com' WHERE wp_options.option_name = 'siteurl'");
     mysqli_query($GLOBALS["___mysqli_ston"], "UPDATE wp_options SET option_value = 'http://wordpress.example.com' WHERE wp_options.option_name = 'home'");
 
