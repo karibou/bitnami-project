@@ -335,7 +335,7 @@ class BuildProjectTests(unittest.TestCase):
         build_project.sys.argv = ['main', ]
         ret = build_project.main()
         m_getvars.assert_called_once_with('docker-compose.yml')
-        m_image.assert_called_once_with()
+        m_image.assert_called_once_with(False)
         m_templates.assert_called_once_with(False, False)
         m_source.assert_called_once_with()
         m_tarball.assert_called_once_with()
@@ -383,7 +383,7 @@ class BuildProjectTests(unittest.TestCase):
         build_project.sys.argv = ['main', '-m']
         ret = build_project.main()
         m_getvars.assert_called_once_with('docker-compose.yml')
-        m_image.assert_called_once_with()
+        m_image.assert_called_once_with(True)
         m_templates.assert_called_once_with(True, False)
         m_source.assert_called_once_with()
         m_tarball.assert_called_once_with()
